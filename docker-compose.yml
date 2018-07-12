@@ -1,0 +1,40 @@
+version: "2"
+services:
+
+  zookeeper:
+    container_name: zookeeper
+    image: wurstmeister/zookeeper:latest
+    ports:
+      - "2181:2181"
+
+  kafka:
+    container_name: kafka
+    image: wurstmeister/kafka:latest
+    depends_on:
+      - zookeeper
+    ports:
+      - "9092:9092"
+    environment:
+      HOSTNAME_COMMAND: "docker info | grep ^Name: | cut -d' ' -f 2"
+      KAFKA_LISTENERS: INSIDE://:9092
+      KAFKA_ADVERTISED_LISTENERS: INSIDE://:9092
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: INSIDE:PLAINTEXT
+      KAFKA_INTER_BROKER_LISTENER_NAME: INSIDE
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+      KAFKA_CREATE_TOPICS: "BBB:1:1"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+
+  rest-proxy:
+    container_name: rest-proxy
+    image: confluentinc/cp-kafka-rest:latest
+    depends_on:
+      - zookeeper
+      - kafka
+    ports:
+      - "8082:8082"
+    environment:
+      KAFKA_REST_HOST_NAME: rest-proxy
+      KAFKA_REST_BOOTSTRAP_SERVERS: kafka:9092
+      KAFKA_REST_LISTENERS: "http://0.0.0.0:8082"
+

@@ -29,7 +29,6 @@ services:
     container_name: rest-proxy
     image: confluentinc/cp-kafka-rest:latest
     depends_on:
-      - zookeeper
       - kafka
     ports:
       - "8082:8082"
